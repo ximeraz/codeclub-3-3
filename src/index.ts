@@ -26,8 +26,12 @@ async function handleRequest(request) {
     // Getting the country based on yhe ip
     const country = await getCountryFromIP(ip)
     
-    // Answer with the country
-    return new Response(`The country associated to the IP ${ip} is: ${country}`)
+    // Answer JSON format
+    return new Response(JSON.stringify({ country }), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
   } else {
     return new Response('This function only accept requests POST.', { status: 405 })
   }
