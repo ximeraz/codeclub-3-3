@@ -11,27 +11,24 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-// src/index.js
-var src_default = {
-  async fetch(request, env, ctx) {
-    if(request.url == "https://www.cloudflareworkers.com/test") {
-           return new Response('Hello worker!', {
-               headers: {
-                   'content-type': 'text/plain',
-               },
-           });
-       }
-       else{
-           return new Response('Error Worker! Wrong URL', {
-               headers: {
-                   'content-type': 'text/plain',
-               },
-           });
-       }
-  }
-};
-export {
-  src_default as default
-};
-//# sourceMappingURL=index.js.map
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  // Getting the ip
+  const ip = request.headers.get('CF-Connecting-IP')
+  
+  // using the geolocation and ip we can know the country
+  const country = await getCountryFromIP(ip)
+  
+  // Answer with the country
+  return new Response(`The country from which the request was made is: ${country}`)
+}
+
+async function getCountryFromIP(ip) {
+  const response = await fetch(`https://ipinfo.io/${ip}/country`)
+  const country = await response.text()
+  return country.trim()
+}
 
