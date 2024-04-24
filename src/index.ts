@@ -16,14 +16,21 @@ addEventListener('fetch', event => {
 })
 
 async function handleRequest(request) {
-  // Getting the ip
-  const ip = request.headers.get('CF-Connecting-IP')
-  
-  // using the geolocation and ip we can know the country
-  const country = await getCountryFromIP(ip)
-  
-  // Answer with the country
-  return new Response(`The country from which the request was made is: ${country}`)
+  if (request.method === 'POST') {
+    // if the request is a POST
+    const body = await request.text()
+    
+    // In case that the ip is in text
+    const ip = body.trim()
+    
+    // Getting the country based on yhe ip
+    const country = await getCountryFromIP(ip)
+    
+    // Answer with the country
+    return new Response(`The country associated to the IP ${ip} is: ${country}`)
+  } else {
+    return new Response('This function only accept requests POST.', { status: 405 })
+  }
 }
 
 async function getCountryFromIP(ip) {
