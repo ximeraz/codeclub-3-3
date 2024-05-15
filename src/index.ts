@@ -1,45 +1,21 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
-
 addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request))
-})
+  event.respondWith(handleRequest(event.request));
+});
 
 async function handleRequest(request) {
-  if (request.method === 'POST') {
-    // if the request is a POST
-    const body = await request.text()
-    
-    // In case that the ip is in text
-    const ip = body.trim()
-    
-    // Getting the country based on yhe ip
-    const country = await getCountryFromIP(ip)
-    
-    // Answer JSON format
-    return new Response(JSON.stringify({ country }), {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-  } else {
-    return new Response('This function only accept requests POST.', { status: 405 })
-  }
-}
+  // Obtener el puntaje del bot desde el encabezado personalizado "x-bot-score"
+  const botScoreHeader = request.headers.get("x-bot-score");
+  const botScore = botScoreHeader ? parseInt(botScoreHeader) : undefined;
 
-async function getCountryFromIP(ip) {
-  const response = await fetch(`https://ipinfo.io/${ip}/country`)
-  const country = await response.text()
-  return country.trim()
+  // Si el puntaje del bot existe y es menor a 30, enviar el tráfico a un origen diferente
+  if (botScore !== undefined && botScore < 30) {
+    // Construir una nueva solicitud con el mismo método, URL y cuerpo que la solicitud original
+    const newRequest = new Request(request);
+    // Enviar la solicitud al "origen" alternativo (httpbin.org/get)
+    return fetch('https://httpbin.org/get', newRequest);
+  } else {
+    // Devolver la respuesta normal
+    return new Response('Acción para tráfico normal', { status: 200 });
+  }
 }
 
